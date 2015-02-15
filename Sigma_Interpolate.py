@@ -1,38 +1,55 @@
 import numpy as np
-import os
-import subprocess as sp
 import math
+import sys
+import os
+import os.path
+import subprocess as sp
+import argparse
+import json
+from pprint import pprint
 
 
 def main():
-	t=1
-	U=4
-
-	S_source = 10
-	B_source = 16
+	#All paths are relative to home directory
+	#home = os.environ['HOME']
+	#Remember current location
+	curloc = os.getcwd()
 	
-	S_dests = [12]
-	B_dests = [16]
+	#Get the name of the json file containing the parameters
+	parser = argparse.ArgumentParser(description='Interpolates the self energy from one temperature and lattice to another')
+	parser.add_argument('old_param_folder',help='folder with old parameter file')
+	parser.add_argument('new_param_folder',help='folder with new parameter file')
+	args = parser.parse_args()
 	
-	dirsuffix = "_1D_CTAUX_dir"
+	#Change to source folder to clean paramfile
+	os.chdir(args.old_param_folder)
+	print "Cleaning source paramfile\n"
+	command = "python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py paramfile paramfile"
+	sp.call(command,shell=True)
+	os.chdir(curloc)	
 	
-	home = os.getcwd()
-	source_dir = home+"/hub_t"+str(t)+"_U"+str(U)+"_B"+str(B_source)+"/"
-	print "Interpolating self energy"
-	for S in S_dests:
-		for B in B_dests:
-			for mu in np.linspace(-1,-0.4,7):
-				source_sub_dir = source_dir + "hub_S"+str(S_source)+"_t"+str(t)+"_U"+str(U)+"_u"+str(mu)+"_B"+str(B_source)+dirsuffix
-				source_param = source_sub_dir+"/paramfile"
-				source_se = source_sub_dir+"/selfenergy_10"
-				dest_dir = "hub_t"+str(t)+"_U"+str(U)+"_B"+str(B)+"/"
-				dest_sub_dir = dest_dir + "hub_S"+str(S)+"_t"+str(t)+"_U"+str(U)+"_u"+str(mu)+"_B"+str(B)+dirsuffix
-				os.chdir(dest_sub_dir)
-				print os.getcwd()
-				command = "~/alps_git/DMFT/AuxiliaryPrograms/sigma_interpolate --pfile_old "+source_param+" --pfile_new paramfile"+" --selfenergy "+source_se
-				print command
-				sp.call(command,shell=True)
-				os.chdir(home)
+	#Change to destination folder for new self energy
+	os.chdir(args.new_param_folder)
+	print os.getcwd()
+	print "Cleaning dest paramfile\n"
+	command = "python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py paramfile paramfile"
+	sp.call(command,shell=True)
+	
+	source_param = curloc+"/"+args.old_param_folder + "/paramfile"
+	source_selfenergy = "selfenergy_"
+	i=1
+	while(os.path.isfile(source_selfenergy+str(i))):
+		i+=1
+	source_selfenergy = curloc+"/"+args.old_param_folder+"/"+source_selfenergy+str(i-1)
+	
+	print "Interpolating self energy"	
+	
+	command = "~/alps_git/DMFT/AuxiliaryPrograms/sigma_interpolate --pfile_old "+source_param+" --pfile_new paramfile"+" --selfenergy "+source_selfenergy
+	print command
+	sp.call(command,shell=True)
+	
+	
+	os.chdir(curloc)
 				
 				
 				
