@@ -5,6 +5,52 @@ import argparse
 import json
 from pprint import pprint
 
+def write_batch_header(batch_file, processname, batch_parameters, total_time):
+	if(batch_parameters["BATCH_TYPE"] == "SBATCH"):
+		batch_file.write("#!/bin/bash\n")
+		batch_file.write("#SBATCH -J "+processname+"\n")
+		batch_file.write("#SBATCH -o "+processname+".o%j\n")
+		batch_file.write("#SBATCH -e "+processname+".e%j\n")
+		batch_file.write("#SBATCH -n "+batch_parameters["PROCS"]+"\n")
+		batch_file.write("#SBATCH -p normal\n")
+		batch_file.write("#SBATCH -t "+str(total_time * 1.5)+":00:00\n")
+		batch_file.write("#SBATCH --mail-user="+batch_parameters["EMAIL"]+"\n")
+		batch_file.write("#SBATCH --mail-type=begin\n")
+		batch_file.write("#SBATCH --mail-type=end\n")
+		batch_file.write("####  End PBS preamble\n")
+		batch_file.write("\n")
+		batch_file.write("#  Show list of CPUs you ran on, if you're running under PBS\n")
+		batch_file.write("""if [ -n "$SLURM_NODELIST" ]; then cat $SLURM_NODELIST; fi\n""")
+		batch_file.write("#  Change to the directory you submitted from\n")
+		batch_file.write("""if [ -n "$SLURM_SUBMIT_DIR" ]; then cd $SLURM_SUBMIT_DIR; fi\n""")
+		batch_file.write("pwd\n")
+		batch_file.write("\n")
+		batch_file.write("#  Put your job commands after this line\n")
+		
+	elif(batch_parameters["BATCH_TYPE"] == "PBS"):
+		batch_file.write("####  PBS preamble\n")
+		batch_file.write("#PBS -N "+processname+"\n")
+		batch_file.write("#PBS -M "+batch_parameters["EMAIL"]+"\n")
+		batch_file.write("#PBS -m abe\n")
+		batch_file.write("#PBS -l procs="+str(batch_parameters["PROCS"])+",pmem="+str(batch_parameters["PMEM"])+",walltime="+str(total_time * 1.5)+":00:00\n")
+		batch_file.write("#PBS -V\n")
+		batch_file.write("#PBS -A "+batch_parameters["ALLOCATION"]+"\n")
+		batch_file.write("#PBS -l qos=flux\n")
+		batch_file.write("#PBS -q "+batch_parameters["QUEUE"]+"\n")
+		batch_file.write("####  End PBS preamble\n")
+		batch_file.write("\n")
+		batch_file.write("#  Show list of CPUs you ran on, if you're running under PBS\n")
+		batch_file.write("""if [ -n "$PBS_NODEFILE" ]; then cat $PBS_NODEFILE; fi\n""")
+		batch_file.write("#  Change to the directory you submitted from\n")
+		batch_file.write("""if [ -n "$PBS_O_WORKDIR" ]; then cd $PBS_O_WORKDIR; fi\n""")
+		batch_file.write("pwd\n")
+		batch_file.write("\n")
+		batch_file.write("#  Put your job commands after this line\n")
+		
+	else:
+		print "Unknown batch type! Exiting!\n"
+		sys.exit()
+
 #Sets up calculations to cool down a system through a series of temperatures
 #Creates a folder with a parameter file for each temperature
 #Creates a batch file that will go into each folder in order, run the job, and interpolate the results for the next temperature
@@ -29,6 +75,7 @@ def main():
 	
 	#Get all the different parameters
 	ind_params = params["independent parameters"]
+	batch_params = params["batch file parameters"]
 	phys_const_params = params["physics constant parameters"]
 	sim_const_params = params["simulation constant parameters"]
 	phys_var_params = params["physics variable parameters"]
@@ -114,20 +161,25 @@ def main():
 		for k in range(0,len(temp),2):
 			independent_parameters[temp[k]] = temp[k+1]
 		print independent_parameters
+		batch_filename = indep_dir+"/batch_file"
+		process_name = indep_dir
+		batch_file = open(batch_filename,'w')
+		write_batch_header(batch_file, process_name, batch_params, TotalTime/3600.0)
 		
 		#Create a directory and parameter file for each job
 		for i in range(0,NumJobs):
-			dirname = indep_dir+"/"+indep_dir
+			dirname = indep_dir
 			for field in phys_var_keys:
 				dirname = str(dirname +"_"+field+"_"+str(phys_var_params[field][i]))
 			for field in sim_var_keys:
 				dirname = str(dirname+"_"+field+"_"+str(sim_var_params[field][i]))
 			print dirname
 			
-			print 'Creating directory: ',dirname
-			command = 'mkdir -p ./'+dirname
+			full_dirname = indep_dir+"/"+dirname
+			print 'Creating directory: ',full_dirname
+			command = 'mkdir -p ./'+full_dirname
 			sp.call(command,shell=True)
-			paramfile = dirname+"/paramfile"
+			paramfile = full_dirname+"/paramfile"
 			output = open(paramfile,'w')
 			
 			for field in independent_parameters.keys():
@@ -143,15 +195,24 @@ def main():
 				output.write(field + " = " + str(sim_const_params[field])+'\n')			
 	
 			for field in sim_var_params.keys():
-				output.write(field + " = " + str(sim_var_params[field][i])+'\n')			
-		
-			
+				output.write(field + " = " + str(sim_var_params[field][i])+'\n')				
 		
 			output.close()
-		
-	
-	
-
+			
+			#Add this job to batch file
+			if(interp_params["INTERPOLATE"] == 1 and not i==0):
+				#Interpolate self energy
+				old_param_dir = old_dirname
+				new_param_dir = dirname
+				command = "python ~/alps_git/DMFT_Scripts/Sigma_Interpolate.py "+old_param_dir+" "+new_param_dir
+				batch_file.write(command+"\n")
+			
+			batch_file.write("cd "+dirname+"\n")	
+			batch_file.write(batch_params["DMFT_LOCATION"]+" paramfile\n")
+			batch_file.write("cd ..\n\n")
+			old_dirname = dirname
+			
+		batch_file.close()
 
 	
 if __name__ == "__main__":
