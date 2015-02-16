@@ -173,7 +173,7 @@ def main():
 				dirname = str(dirname +"_"+field+"_"+str(phys_var_params[field][i]))
 			for field in sim_var_keys:
 				dirname = str(dirname+"_"+field+"_"+str(sim_var_params[field][i]))
-			print dirname
+			#print dirname
 			
 			full_dirname = indep_dir+"/"+dirname
 			print 'Creating directory: ',full_dirname
@@ -195,9 +195,13 @@ def main():
 				output.write(field + " = " + str(sim_const_params[field])+'\n')			
 	
 			for field in sim_var_params.keys():
-				output.write(field + " = " + str(sim_var_params[field][i])+'\n')				
-		
+				output.write(field + " = " + str(sim_var_params[field][i])+'\n')
+				
 			output.close()
+				
+			command = 'python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py '+paramfile+' '+paramfile
+			sp.call(command,shell=True)				
+		
 			
 			#Add this job to batch file
 			if(interp_params["INTERPOLATE"] == 1 and not i==0):
@@ -209,6 +213,7 @@ def main():
 			
 			batch_file.write("cd "+dirname+"\n")	
 			batch_file.write(batch_params["DMFT_LOCATION"]+" paramfile\n")
+			batch_file.write('python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py paramfile paramfile\n')
 			batch_file.write("cd ..\n\n")
 			old_dirname = dirname
 			

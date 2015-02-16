@@ -1,0 +1,79 @@
+{
+	"independent parameters":
+	{
+		"MU":	[0.0,-0.2,-0.4,-0.6]
+	},
+
+	"physics constant parameters":
+	{
+		"t":	1,
+		"H":	0,
+		"U":	4,
+		"FLAVORS":	2,
+		"SITES":	16,
+		"PARAMAGNET":	1,
+		"ISOLATED":	0,
+		"PHASE":	0
+	},
+
+	"physics variable parameters":
+	{
+
+		"BETA":	[0.5,0.75,1,2]
+	},
+
+	"simulation constant parameters":
+	{
+		"H_INIT":		0.0,
+		"CONVERGED":		1e-6,
+		"L":			30,
+		"N":			1024,
+		"NMATSUBARA":		1024,
+		"N_MEAS":		20,
+		"N_OMEGA_MEAS":		1024,
+		"MEASUREMENT_METHOD":	"FREQUENCY_MEASUREMENT",
+		"OMEGA_LOOP":		1,
+		"START_SITES":		2,
+		"SOLVER":		"ibrun ~/alps_git/DMFT-solvers/CTAUX_SUB_NGS/ctaux_mpi",
+		"K":			1,
+		"KMAX":			80,
+		"SYMMETRIZATION":	0,
+		"CLUSTER_LOOP":		"DCA",
+		"MAX_IT":		10,
+		"LATTICE_LIBRARY":	"cluster.xml",
+		"LATTICE":		"Betts2D-16B",
+		"SWEEPS":		1000000000000,
+		"THERMALIZATION":	10000,
+		"OMEGA_LOOP":		1,
+		"G0OMEGA_INPUT":	"G0omega_input",
+		"BASENAME":		"paramfile",
+		"NFLIP":		2,
+		"TMPNAME":		"tmp_solver_file",
+		"WRITE_SPARSE":		1,
+		"RECOMPUTE_INTERVAL":	4000
+	},
+
+	"simulation variable parameters":
+	{
+		"MAX_TIME":		[900,900,1800,1800]
+	},
+
+	"batch file parameters":
+	{
+		"BATCH_TYPE":		"SBATCH",
+		"EMAIL":		"oryx@umich.edu",
+		"PROCS":		"128",
+		"PMEM":			"1gb",
+		"QUEUE":		"flux",
+		"ALLOCATION":		"egull_flux",
+		"DMFT_LOCATION":	"~/alps_git/DMFT/dmft"
+
+	},
+
+	"interpolation parameters":
+	{
+		"INTERPOLATE":		1
+	}
+
+
+}
