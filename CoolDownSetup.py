@@ -212,7 +212,7 @@ def main():
 				batch_file.write(command+"\n")
 			
 			batch_file.write("cd "+dirname+"\n")
-			command = 'python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py '+paramfile+' '+paramfile
+			command = 'python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py paramfile paramfile'
 			batch_file.write(command+'\n')			
 			batch_file.write(batch_params["DMFT_LOCATION"]+" paramfile\n")
 			batch_file.write('python ~/alps_git/DMFT_Scripts/Clean_ALPS_Param.py paramfile paramfile\n')
