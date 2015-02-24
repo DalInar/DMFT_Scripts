@@ -38,7 +38,7 @@ def main():
 	source_param = curloc+"/"+args.old_param_folder + "/paramfile"
 	source_selfenergy = "selfenergy_"
 	i=1
-	while(os.path.isfile(source_selfenergy+str(i))):
+	while(os.path.isfile(curloc+"/"+args.old_param_folder+"/"+source_selfenergy+source_selfenergy+str(i))):
 		i+=1
 	source_selfenergy = curloc+"/"+args.old_param_folder+"/"+source_selfenergy+str(i-1)
 	
