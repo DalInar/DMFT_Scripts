@@ -13,11 +13,11 @@ def main():
 	
 	home = os.getcwd()
 	
-	order = range(0,600)
 	count = []
 	
 	f=h5py.File('sim.h5','r')
-	
+	max_order = len(f['simulation/results/orders/mean/value'])
+	order = range(0,max_order)
 	for i in order:
 		count.append(f['simulation/results/orders/mean/value'][i])
 	
