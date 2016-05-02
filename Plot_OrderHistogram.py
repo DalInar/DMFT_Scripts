@@ -16,8 +16,10 @@ def main():
 	count = []
 	
 	f=h5py.File('sim.h5','r')
+
+	default_max_order = 70
 	max_order = len(f['simulation/results/orders/mean/value'])
-	order = range(0,max_order)
+	order = range(0,max(max_order,default_max_order))
 	for i in order:
 		count.append(f['simulation/results/orders/mean/value'][i])
 	
