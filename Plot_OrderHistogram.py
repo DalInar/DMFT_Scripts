@@ -19,7 +19,7 @@ def main():
 
 	default_max_order = 70
 	max_order = len(f['simulation/results/orders/mean/value'])
-	order = range(0,max(max_order,default_max_order))
+	order = range(0,min(max_order,default_max_order))
 	for i in order:
 		count.append(f['simulation/results/orders/mean/value'][i])
 	
